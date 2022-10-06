@@ -1,0 +1,5 @@
+{
+    "tasks":{
+        "cache": "deno cache --reload mod.ts"
+    }
+}
