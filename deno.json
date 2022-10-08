@@ -1,5 +1,8 @@
 {
-    "tasks":{
-        "cache": "deno cache --reload mod.ts"
-    }
+  "compilerOptions": {
+    "noImplicitOverride": true
+  },
+  "tasks": {
+    "cache": "deno cache --reload mod.ts"
+  }
 }

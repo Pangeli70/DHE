@@ -196,27 +196,27 @@ export class ApgDhe {
           }
         case eApgDheChunkTypes.VALUE:
           {
-            const fragment = this._processValueChunk(currentChunk.content, adata);
+            const fragment = this._processValueChunk(currentChunk.content.trim(), adata);
             fragments.push(fragment);
             break;
           }
         case eApgDheChunkTypes.BEGIN_LOOP:
           {
-            const r = this._processLoopChunk(i, currentChunk.content, adata, achunks);
+            const r = this._processLoopChunk(i, currentChunk.content.trim(), adata, achunks);
             fragments.push(r.fragment);
             i = r.i;
             break;
           }
         case eApgDheChunkTypes.IF:
           {
-            const r = this._processIfChunk(i, currentChunk.content, adata, achunks, true);
+            const r = this._processIfChunk(i, currentChunk.content.trim(), adata, achunks, true);
             fragments.push(r.fragment);
             i = r.i;
             break;
           }
         case eApgDheChunkTypes.IF_NOT:
           {
-            const r = this._processIfChunk(i, currentChunk.content, adata, achunks, false);
+            const r = this._processIfChunk(i, currentChunk.content.trim(), adata, achunks, false);
             fragments.push(r.fragment);
             i = r.i;
             break;
@@ -310,10 +310,10 @@ export class ApgDhe {
     let fragment: string;
 
     if (!adata[valueName]) {
-      fragment = "{{" + valueName + " - NOT FOUND !!!}}";
+      fragment = "{{" + valueName + "}} - NOT FOUND !!!";
     }
     else if (!Array.isArray(adata[valueName])) {
-      fragment = "{{" + valueName + " - ISN'T AN ARRAY!!!";
+      fragment = "{{" + valueName + "}} - ISN'T AN ARRAY!!!";
     }
     else {
 
@@ -360,7 +360,7 @@ export class ApgDhe {
       (value) != '0' &&
       (value) != '1'
     ) {
-      fragment = "{{" + valueName + " - ISN'T A BOOLEAN VALUE!!! allowed values are 'true', 'false', '0', '1'}}";
+      fragment = "{{" + valueName + "}} - ISN'T A BOOLEAN VALUE!!! allowed values are 'true', 'false', '0', '1'";
     }
     else {
 
@@ -392,17 +392,29 @@ export class ApgDhe {
   }
 
 
-  private static _processValueChunk(valueName: string, adata: TApgDheDictionary): string {
+  private static _processValueChunk(avaluePath: string, adata: TApgDheDictionary): string {
     let r: string;
 
-    if (!adata[valueName]) {
-      r = "{{" + valueName + " - NOT FOUND !!!}}";
+    const value = Uts.ApgUtsObj.Indirect(adata, avaluePath)
+
+    if (!value) {
+      r = "{{" + avaluePath + "}} - NOT FOUND !!!";
     }
-    else if (Array.isArray(adata[valueName])) {
-      r = "{{" + valueName + " - IS AN ARRAY!!!";
+    else if (Array.isArray(value)) {
+      r = "{{" + avaluePath + "}} - IS AN ARRAY!!!";
     }
     else {
-      r = <string>adata[valueName];
+      if (typeof value !== "string") {
+        if (typeof value.toString === "function") {
+          r = value.toString();
+        }
+        else {
+          r = JSON.stringify(value, null, 2);
+        }
+      }
+      else {
+        r = value;
+      }
     }
     return r;
 
@@ -421,7 +433,7 @@ export class ApgDhe {
     const chunks: IApgDheChunk[] | undefined = ApgDhe._getChunks(aresource);
 
     if (!chunks) {
-      return "ERROR 021354688";
+      return "It was impossible to get chunks for the resource: " + aresource;
     }
 
     return ApgDhe._processChunks(chunks, adata);
